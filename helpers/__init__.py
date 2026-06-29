@@ -1,13 +1,9 @@
 """
-Helper modules for immigration data scraping system.
+Helper modules for the gale_visa ETL pipeline (Databricks).
 
-This package contains infrastructure and utility code:
-- db_manifest: Database manifest for tracking files
-- db_schema: SQL schema definitions
-- init_db: Database initialization
-- paths: File system path helpers
-- crawl: Manifest reconciliation
-- reset: Database reset utility
+- manifest    : DeltaManifest — tracks downloaded files in a Delta Lake table
+- init_tables : creates the gale_visa schema and file_manifest table on Databricks
+- paths       : DBFS path helpers and Delta table name configuration
 """
 
 __version__ = "1.0.0"

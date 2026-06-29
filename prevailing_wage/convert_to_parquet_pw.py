@@ -24,7 +24,7 @@ def convert_all_excels():
             df = pd.read_excel(excel_path, dtype=str)
             df.to_parquet(parquet_path)
 
-    print("Done converting all PERM XLSX -> Parquet")
+    print("Done converting all PW XLSX -> Parquet")
             
 
 if __name__ == "__main__":

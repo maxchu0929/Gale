@@ -1,9 +1,12 @@
-requests>=2.31.0
-beautifulsoup4>=4.12.0
-python-dateutil>=2.8.2
-psycopg[binary]>=3.1.0
-lxml>=4.9.0
-python-dotenv>=1.0.0
+# ETL pipeline — data processing
 pandas>=2.0.0
 openpyxl>=3.1.0
 pyarrow>=14.0.0
+
+# Databricks integration
+databricks-sdk>=0.20.0          # REST API: jobs, DBFS file upload, cluster management
+
+# Local development against a Databricks cluster:
+#   pip install databricks-connect==<runtime-version>.*
+#   (version must match your cluster's Databricks Runtime, e.g. 14.3.*)
+#   databricks-connect includes PySpark + Delta Lake for local execution.

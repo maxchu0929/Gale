@@ -1,124 +1,80 @@
-# paths.py
+# paths.py — Databricks DBFS path configuration for the gale_visa pipeline
 import os
 import re
-from pathlib import Path
 
-# Railway volume is mounted at /data
-DATA_ROOT = Path(os.environ.get("DATA_ROOT", "/data")).resolve()
+# DBFS root for all gale_visa data.
+# Override with GALE_VISA_DBFS_ROOT env var to use a custom mount point.
+DBFS_ROOT = os.environ.get("GALE_VISA_DBFS_ROOT", "dbfs:/FileStore/gale_visa")
 
-# Main directory structure for each data source
-VISA_STATS_DIR = DATA_ROOT / "visa_stats"
-DOL_DIR = DATA_ROOT / "performance_data"
-YEARBOOK_DIR = DATA_ROOT / "immigration_yearbook"
-USCIS_DIR = DATA_ROOT / "uscis_data"
+# Top-level data directories (DBFS URIs)
+PERFORMANCE_DATA_DIR = f"{DBFS_ROOT}/performance_data"  # DOL PERM/LCA/PW/H-2A/H-2B files
+VISA_STATS_DIR       = f"{DBFS_ROOT}/visa_stats"         # State Dept monthly/annual visa files
+USCIS_DIR            = f"{DBFS_ROOT}/uscis_data"         # USCIS H-1B/H-2A/H-2B employer files
 
-# Create base directories
-VISA_STATS_DIR.mkdir(parents=True, exist_ok=True)
-DOL_DIR.mkdir(parents=True, exist_ok=True)
-YEARBOOK_DIR.mkdir(parents=True, exist_ok=True)
-USCIS_DIR.mkdir(parents=True, exist_ok=True)
+# Delta table location (2-level namespace for Community Edition; override for Unity Catalog)
+CATALOG        = os.environ.get("GALE_VISA_CATALOG", "hive_metastore")
+SCHEMA         = os.environ.get("GALE_VISA_SCHEMA",  "gale_visa")
+MANIFEST_TABLE = f"{CATALOG}.{SCHEMA}.file_manifest"
+
+
+def dbfs_to_local(path: str) -> str:
+    """
+    Convert a dbfs:/ URI to the equivalent /dbfs/ local path readable on cluster nodes.
+    e.g. "dbfs:/FileStore/gale_visa/foo.xlsx" -> "/dbfs/FileStore/gale_visa/foo.xlsx"
+    """
+    if path.startswith("dbfs:/"):
+        return "/dbfs/" + path[len("dbfs:/"):]
+    return path
+
+
+def _sanitize(name: str) -> str:
+    """Strip filesystem-unsafe characters and cap length."""
+    return re.sub(r'[\\/*?:"<>|]', "_", name.strip())[:80]
 
 
 # ============================================================================
-# VISA STATISTICS PATHS (existing)
+# VISA STATISTICS PATHS
 # ============================================================================
 
-def get_monthly_outdir(program: str, period: str) -> Path:
+def get_monthly_outdir(program: str, period: str) -> str:
     """
-    Get output directory for monthly files.
-    
-    Args:
-        program: "IV" or "NIV"
-        period: e.g., "FY2024-10"
-    
-    Returns:
-        Path like /data/visa_stats/monthly/IV/FY2024/FY2024-10/
+    DBFS path for monthly visa stats files.
+    e.g. get_monthly_outdir("IV", "FY2024-10") -> "dbfs:/FileStore/gale_visa/visa_stats/monthly/IV/FY2024/FY2024-10"
     """
-    # Extract fiscal year from period (e.g., "FY2024-10" -> "FY2024")
     fy_match = re.match(r"(FY\d{4})", period)
-    
     if fy_match:
         fiscal_year = fy_match.group(1)
-        path = VISA_STATS_DIR / "monthly" / program / fiscal_year / period
-    else:
-        # Fallback for periods without FY format
-        path = VISA_STATS_DIR / "monthly" / program / period
-    
-    path.mkdir(parents=True, exist_ok=True)
-    return path
+        return f"{VISA_STATS_DIR}/monthly/{program}/{fiscal_year}/{period}"
+    return f"{VISA_STATS_DIR}/monthly/{program}/{period}"
 
 
-def get_annual_outdir(year: str) -> Path:
+def get_annual_outdir(year: str) -> str:
     """
-    Get output directory for annual files.
-    
-    Args:
-        year: e.g., "2024"
-    
-    Returns:
-        Path like /data/visa_stats/annual/2024/
+    DBFS path for annual visa stats files.
+    e.g. get_annual_outdir("2024") -> "dbfs:/FileStore/gale_visa/visa_stats/annual/2024"
     """
-    path = VISA_STATS_DIR / "annual" / year
-    path.mkdir(parents=True, exist_ok=True)
-    return path
+    return f"{VISA_STATS_DIR}/annual/{year}"
 
 
 # ============================================================================
-# DOL PERFORMANCE DATA PATHS (new)
+# DOL PERFORMANCE DATA PATHS
 # ============================================================================
 
-def get_dol_outdir(program: str, year: str) -> Path:
+def get_dol_outdir(program: str, year: str) -> str:
     """
-    Get output directory for DOL performance data files.
-    
-    Args:
-        program: e.g., "PERM Program", "LCA Program", "H-2A Program"
-        year: e.g., "2024"
-    
-    Returns:
-        Path like /data/performance_data/PERM Program/2024/
+    DBFS path for DOL performance data files.
+    e.g. get_dol_outdir("PERM Program", "2024") -> "dbfs:/FileStore/gale_visa/performance_data/PERM_Program/2024"
     """
-    # Sanitize program name for filesystem
-    safe_program = re.sub(r'[\\/*?:"<>|]', '_', program.strip())
-    path = DOL_DIR / safe_program / year
-    path.mkdir(parents=True, exist_ok=True)
-    return path
+    return f"{PERFORMANCE_DATA_DIR}/{_sanitize(program)}/{year}"
 
 
 # ============================================================================
-# IMMIGRATION YEARBOOK PATHS (new)
+# USCIS EMPLOYER DATA PATHS
 # ============================================================================
 
-def get_yearbook_outdir(year: str) -> Path:
+def get_uscis_outdir(visa_type: str, year_or_misc: str) -> str:
     """
-    Get output directory for immigration yearbook files.
-    
-    Args:
-        year: e.g., "2024"
-    
-    Returns:
-        Path like /data/immigration_yearbook/2024/
+    DBFS path for USCIS employer data files.
+    e.g. get_uscis_outdir("h1b", "2024") -> "dbfs:/FileStore/gale_visa/uscis_data/h1b/2024"
     """
-    path = YEARBOOK_DIR / year
-    path.mkdir(parents=True, exist_ok=True)
-    return path
-
-
-# ============================================================================
-# USCIS EMPLOYER DATA PATHS (new)
-# ============================================================================
-
-def get_uscis_outdir(visa_type: str, year_or_misc: str) -> Path:
-    """
-    Get output directory for USCIS employer data files.
-    
-    Args:
-        visa_type: "h1b", "h2a", or "h2b"
-        year_or_misc: e.g., "2024" or "misc"
-    
-    Returns:
-        Path like /data/uscis_data/h1b/2024/ or /data/uscis_data/h1b/misc/
-    """
-    path = USCIS_DIR / visa_type / year_or_misc
-    path.mkdir(parents=True, exist_ok=True)
-    return path
+    return f"{USCIS_DIR}/{visa_type}/{year_or_misc}"
