@@ -1,19 +1,30 @@
-venv/
-.env
-.venv
-__pycache__/*.pyc
-.DS_Store
-new_test/
-team_test/
-__pycache__/
+# ── Data outputs (downloaded files, logs, manifests) ──────────────────────────
 data/
 
-# PERM output files
-perm/perm_db.csv
-perm/*.csv
-perm/*.parquet
-perm/data/
+# ── Python ────────────────────────────────────────────────────────────────────
+venv/
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+dist/
+build/
+.Python
 
-# LCA output files
-lca/lca_db.csv
-lca/lca_clean.csv
+# ── Environment / secrets ─────────────────────────────────────────────────────
+.env
+.env.local
+.env.*
+
+# ── Databricks ────────────────────────────────────────────────────────────────
+.databricks/
+
+# ── OS / IDE ──────────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.swo

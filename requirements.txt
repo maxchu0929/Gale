@@ -1,12 +1,16 @@
-# ETL pipeline — data processing
+# Scraper
+requests>=2.31.0
+beautifulsoup4>=4.12.0
+lxml>=4.9.0
+
+# ETL pipelines
 pandas>=2.0.0
 openpyxl>=3.1.0
 pyarrow>=14.0.0
 
 # Databricks integration
-databricks-sdk>=0.20.0          # REST API: jobs, DBFS file upload, cluster management
+databricks-sdk>=0.20.0
 
-# Local development against a Databricks cluster:
+# For local development against a Databricks cluster:
 #   pip install databricks-connect==<runtime-version>.*
 #   (version must match your cluster's Databricks Runtime, e.g. 14.3.*)
-#   databricks-connect includes PySpark + Delta Lake for local execution.

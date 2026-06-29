@@ -2,7 +2,8 @@ import pandas as pd
 import os
 
 PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
-BASE_PATH = os.path.join(PROJECT_ROOT, "data", "PERM Program")
+REPO_ROOT    = os.path.dirname(PROJECT_ROOT)
+BASE_PATH    = os.path.join(REPO_ROOT, "data", "PERM Program")
 
 print("Using PERM root:", BASE_PATH)
 
